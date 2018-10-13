@@ -10,9 +10,12 @@ assembleLine = ""
 postNumber = 0
 raceNumber = 0
 
+postColors = []
+postColors = ["Red", "Blue", "Silver", "Green", "Black", "Yellow", "Orange", "Ylk/Blk"]
+
 # Bring in the PDF file as a binary to be converted
 
-inFile = open("C:/Users/sgnol/Downloads/sat eve 9-15-program.pdf", "rb")
+inFile = open("C:/Users/sgnol/Documents/projects/race_day/data/sat eve 9-15-program.pdf", "rb")
 
 # Convert the binary file into a readable file
 
@@ -20,20 +23,22 @@ pdfFile = PyPDF2.PdfFileReader(inFile)
 
 # Open a text file to receive output and make sure it is empty
 
-outFile = open('C:/Users/sgnol/Downloads/Southland2.txt', 'a+')
+outFile = open('C:/Users/sgnol/Documents/projects/race_day/data/Southland.txt', 'a+')
 outFile.seek(0)
 outFile.truncate()
 
 # Open a work file to use when reading text
 
-workFile = open('C:/Users/sgnol/Downloads/workfile.txt', 'w')
 
 
 # Get the number of pages in the text file. 
 # This will set race number and the limit for the outer loop count
 # CAUTION: The pages start with 0 so race number will be page # + 1
 
-#pageCount = pdfFile.numPages
+pageCount = pdfFile.numPages
+
+print ("Page Count = " + str(pageCount))
+
 x = 0
 while x <= pageCount:
     
@@ -42,6 +47,10 @@ while x <= pageCount:
     
     pdfPage = pdfFile.getPage(x)
     textFile = pdfPage.extractText()
+
+    workFile = open('C:/Users/sgnol/Documents/projects/race_day/data/workfile.txt', 'w')
+    workFile.seek(0)
+    workFile.truncate()
     workFile.write(textFile)
     workFile.close()
 
@@ -49,7 +58,7 @@ while x <= pageCount:
 # file is a bunch of empty lines. Iterate through them until you get to 
 # first row of actual data
     
-    workFile = open('C:/Users/sgnol/Downloads/workfile.txt', 'r')
+    workFile = open('C:/Users/sgnol/Documents/projects/race_day/data/workfile.txt', 'r')
     
 # Calculate the race number and set default signal for empty line and EOF
     
@@ -80,8 +89,8 @@ while x <= pageCount:
             isEmptyLine = False
             
 # Once you reach the first valid line of data start looking for a specfic
-# pattern of Kennel:. This will signify the start of a post postion and begin
-# a new line
+# pattern of "Track Record:" Once found look for "Red" and this will signify 
+# the start of a post postion and begin # a new line
     
     z = 0
     
@@ -96,21 +105,23 @@ while x <= pageCount:
             break
             
         lineCount += 1
-                
+        
+#        if fileLine.find("Track Record:") >= 0:   # Found first pattern in post                
         if fileLine.find("Kennel:") >= 0:   # Found first pattern in post
- 
-            postNumber += 1
-                
+
+           postNumber += 1
+               
 # Write out anything that may already be in the assembleLine then clear it
 # as start building the next line to write
-            
-            if assembleLine != "":          
-                outFile.write(assembleLine + "\n")
-                assembleLine = ""
-                assembleLine = str(lineCount) + "\t" + str(raceNumber) + "\t" + str(postNumber) + "\t"
+           
+           if assembleLine != "":          
+               outFile.write(assembleLine + "\n")
+               assembleLine = ""
+               assembleLine = str(lineCount) + "\t" + str(raceNumber) + "\t" + str(postNumber) + "\t"
  
            
         assembleLine = assembleLine + fileLine.replace("\n","")
+#        assembleLine = assembleLine.replace(" ", "\t")
 
 
         z += 1
@@ -120,10 +131,10 @@ while x <= pageCount:
 # Next page of pgm
 
     x += 1
-    
+    print ("x = " + str(x))
+
 # Done. Close all files and exit program
  
 inFile.close()
 outFile.close()
 workFile.close()
-
