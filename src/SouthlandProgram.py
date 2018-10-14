@@ -93,7 +93,8 @@ while x <= pageCount:
 # the start of a post postion and begin # a new line
     
     z = 0
-    
+    postNumber = 0
+
     while isEndOfFile == False:
         
         fileLine = workFile.readline()
@@ -112,7 +113,7 @@ while x <= pageCount:
            postNumber += 1
                
 # Write out anything that may already be in the assembleLine then clear it
-# as start building the next line to write
+# and start building the next line to write
            
            if assembleLine != "":          
                outFile.write(assembleLine + "\n")
@@ -134,6 +135,9 @@ while x <= pageCount:
 # Next page of pgm
 
     x += 1
+    if x > pageCount:
+        break
+
     print ("x = " + str(x))
 
 # Done. Close all files and exit program
