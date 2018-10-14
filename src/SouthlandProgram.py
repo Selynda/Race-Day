@@ -121,6 +121,9 @@ while x <= pageCount:
  
            
         assembleLine = assembleLine + fileLine.replace("\n","")
+        assembleLine = assembleLine.replace(chr(188),".25")
+        assembleLine = assembleLine.replace(chr(189),".5")
+        assembleLine = assembleLine.replace(chr(190),".75")
 #        assembleLine = assembleLine.replace(" ", "\t")
 
 
