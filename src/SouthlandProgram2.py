@@ -46,10 +46,10 @@ outFile.truncate()
 x = 0
 while x <= pageCount-1:
 
-    print ("page number = " + str(x))
+    print ("page number = " + s                   x(x))
 
-# Using the page number, bring in the first page. Write it to a working
-# file so it can be read line-by-line
+# Using the page number, bring                    x the first page. Write it to a working
+# file so it can be read line-b                   xline
     
     pdfPage = pdfFile.getPage(x)
 
