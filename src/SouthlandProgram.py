@@ -232,7 +232,14 @@ while x <= pageCount-1:
                     elif "Ylw/Blk" in fileLine[fileLine.find("Best Time:"):(fileLine.find("Best Time:")+25)]:
                         assembleLine = assembleLine + fileLine[0:fileLine.find("Ylw/Blk")]
                         outFile.write(str(raceNumber) + "\t" + str(postNumber) + "\t" + assembleLine + "\n")
-                        assembleLine = fileLine[fileLine.find("Ylw/Blk"):len(fileLine)]    
+                        assembleLine = fileLine[fileLine.find("Ylw/Blk"):len(fileLine)]  
+
+                        if assembleLine.find("SELECTIONS ") >= 0:
+                            assembleLine = assembleLine[0:assembleLine.find("SELECTIONS ")]
+                            postNumber += 1
+                            outFile.write(str(raceNumber) + "\t" + str(postNumber) + "\t" + assembleLine + "\n")
+                            assembleLine = ""
+                            isEndOfRace = True  
   
                 else:
 
@@ -258,7 +265,7 @@ while x <= pageCount-1:
             
 # Next page of pgm
 
-    x += 20
+    x += 1
     assembleLine = ""
 
 
