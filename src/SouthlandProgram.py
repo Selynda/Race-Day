@@ -98,9 +98,9 @@ while x <= pageCount-1:
 # with a bunch of blank spaces prior to the CRLF. Replace all of them 
 # with a empty value so the line can be read as an empty line.
 
-        assembleLine = fileLine.replace(" ","")
+        fileLine = fileLine.replace(" ","")
         
-        if assembleLine[:1] != "\n":            # test for not empty line to signal found data
+        if fileLine[:1] != "\n":            # test for not empty line to signal found data
             isEmptyLine = False
 #====================================================================================
 
@@ -110,6 +110,8 @@ while x <= pageCount-1:
     
     z = 0
     postNumber = 0
+    isLastPostPosition = False
+
 #====================================================================================
 # Second loop to slice and dice the text line
 #====================================================================================    
@@ -132,131 +134,89 @@ while x <= pageCount-1:
         fileLine = fileLine.replace(chr(189),".5")  # 1/2
         fileLine = fileLine.replace(chr(190),".75") # 3/4
 
-# Find the pattern that starts a race. This is usually "Track Record:". This will be 
-# followed by the record (if it exists) which is then followed by the first post
-# color of "Red". This signals the start of the first post position.
-#   Example: Track Record: <dag's name>, 99.99 mm/dd/yyy Red
+# append to working line (assembleLine)
 
-# The end of a post position is signaled by "Best Time:" or EOF if post position is empty
-# at time of race.
-#   Example: Best Time: 99.99 Blue or Best Time:  Blue
+        assembleLine = assembleLine + fileLine
 
-        if fileLine.find("Track Record:") >= 0:   # Found first pattern in race                
-        # if fileLine.find("Kennel:") >= 0:   # Found first pattern in post
+# Look for signals to slice and dice
+# Signal 1: Track Record: Signals start of post positions
+# Signal 2b: NO GREYHOUND IN THIS POST POSITION signals end of post position
+# Signal 2a: Best Time: Signals end of post position
+# Signal 3: SELECTIONS Signals end of race data
 
-# Write out anything that may already be in the assembleLine then clear it
-# and start building the next line to write
-           
-            assembleLine = ""
+# Signal 1
 
-# Start slicing and dicing the lines until EOF is reached
-# First step after finding Track Record is to find 1st post color of Red
+        if assembleLine.find("Track Record:") >= 0:   
 
-# If post color found on same line, then slice the line and write out
-# part with Track Record: as its own line. Keep remaining part of line
-# that starts with Red. If post color is not on the same line then
-# write the line with no slicing
+        # Look for post 1 color Red. If found slice line and write out
+        # Then reset line and keep going
 
-           
-            if fileLine.find("Red") >= 0:
-                outFile.write(fileLine[0:fileLine.find("Red")]) + "\n"
-                assembleLine = fileLine[fileLine.find("Red"):len(fileLine)]
-            else:
-                outFile.write(str(raceNumber) + "\t" + "0" + "\t" + fileLine + "\n")
-                
-            isEndOfRace = False
-
-            while isEndOfRace == False:
-
-                fileLine = workFile.readline()
-                if fileLine == "":
-                    if assembleLine != "":
-                        outFile.write(str(raceNumber) + "\t" + str(postNumber) + "\t" + assembleLine + "\n")
-                    
-                    endofRace = True
-                    break
-
-                fileLine = fileLine.replace("\n","")        # new line
-                fileLine = fileLine.replace(chr(188),".25") # 1/4
-                fileLine = fileLine.replace(chr(189),".5")  # 1/2
-                fileLine = fileLine.replace(chr(190),".75") # 3/4
-              
-# Look for Best Time: This signals the end of the data for all post position unless there
-# is no entry for that post position.
-
-#   Logic:
-#   If next post color is on the same line then line has to be sliced and next post
-#       position prepared for assembly
-#   If not on the same line then
-#       then read next line and post color will be there
-#       If post is empty, slice for empty post position
-#           If last post position, then break loop and start next race
+            if "Red " in assembleLine[assembleLine.find("Track Record:"):len(assembleLine)]:
+                outFile.write(assembleLine[:assembleLine.find("Red ")] + "\n") 
+                assembleLine = assembleLine[assembleLine.find("Red "):len(assembleLine)]
 
 
-#   If post color is found but post is empty, then slice that color and read next line
+# Signal 2a
 
-                if fileLine.find("Best Time:") >= 0:
+        if assembleLine.find("Best Time:") >= 0:
 
-                    postNumber += 1
+        # Increment post number
 
-                    if "Blue" in fileLine[fileLine.find("Best Time:"):(fileLine.find("Best Time:")+25)]:
-                        assembleLine = assembleLine + fileLine[0:fileLine.find("Blue")]
-                        outFile.write(str(raceNumber) + "\t" + str(postNumber) + "\t" + assembleLine + "\n")
-                        assembleLine = fileLine[fileLine.find("Blue"):len(fileLine)] 
+            postNumber += 1
 
-                    elif "Silver" in fileLine[fileLine.find("Best Time:"):(fileLine.find("Best Time:")+25)]:
-                        assembleLine = assembleLine + fileLine[0:fileLine.find("Silver")]
-                        outFile.write(str(raceNumber) + "\t" + str(postNumber) + "\t" + assembleLine + "\n")
-                        assembleLine = fileLine[fileLine.find("Silver"):len(fileLine)]    
+        # See if next post color is on the same line. If it is, slice line and rebuild assembleLine with left over line.
+        # CAUTION: Need to search for post color within 25 positions of Best Time just in case the color is used in the
+        # dogs name
 
-                    elif "Green" in fileLine[fileLine.find("Best Time:"):(fileLine.find("Best Time:")+25)]:
-                        assembleLine = assembleLine + fileLine[0:fileLine.find("Green")]
-                        outFile.write(str(raceNumber) + "\t" + str(postNumber) + "\t" + assembleLine + "\n")
-                        assembleLine = fileLine[fileLine.find("Green"):len(fileLine)]    
+            if "Blue " in assembleLine[assembleLine.find("Best Time:"):(assembleLine.find("Best Time:")+25)]:
+                outFile.write(str(raceNumber) + "\t" + str(postNumber) + "\t" + assembleLine[:assembleLine.find("Blue")] + "\n")
+                assembleLine = assembleLine[assembleLine.find("Blue"):len(assembleLine)] 
 
-                    elif "Black" in fileLine[fileLine.find("Best Time:"):(fileLine.find("Best Time:")+25)]:
-                        assembleLine = assembleLine + fileLine[0:fileLine.find("Black")]
-                        outFile.write(str(raceNumber) + "\t" + str(postNumber) + "\t" + assembleLine + "\n")
-                        assembleLine = fileLine[fileLine.find("Black"):len(fileLine)]    
+            elif "Silver " in assembleLine[assembleLine.find("Best Time:"):(assembleLine.find("Best Time:")+25)]:
+                outFile.write(str(raceNumber) + "\t" + str(postNumber) + "\t" + assembleLine[:assembleLine.find("Silver ")] + "\n")
+                assembleLine = assembleLine[assembleLine.find("Silver "):len(assembleLine)]    
 
-                    elif "Yellow" in fileLine[fileLine.find("Best Time:"):(fileLine.find("Best Time:")+25)]:
-                        assembleLine = assembleLine + fileLine[0:fileLine.find("Yellow")]
-                        outFile.write(str(raceNumber) + "\t" + str(postNumber) + "\t" + assembleLine + "\n")
-                        assembleLine = fileLine[fileLine.find("Yellow"):len(fileLine)]    
+            elif "Green " in assembleLine[assembleLine.find("Best Time:"):(assembleLine.find("Best Time:")+25)]:
+                outFile.write(str(raceNumber) + "\t" + str(postNumber) + "\t" + assembleLine[:assembleLine.find("Green ")] + "\n")
+                assembleLine = assembleLine[assembleLine.find("Green "):len(assembleLine)]
 
-                    elif "Orange" in fileLine[fileLine.find("Best Time:"):(fileLine.find("Best Time:")+25)]:
-                        assembleLine = assembleLine + fileLine[0:fileLine.find("Orange")]
-                        outFile.write(str(raceNumber) + "\t" + str(postNumber) + "\t" + assembleLine + "\n")
-                        assembleLine = fileLine[fileLine.find("Orange"):len(fileLine)]    
+            elif "Black " in assembleLine[assembleLine.find("Best Time:"):(assembleLine.find("Best Time:")+25)]:
+                outFile.write(str(raceNumber) + "\t" + str(postNumber) + "\t" + assembleLine[:assembleLine.find("Black ")] + "\n")
+                assembleLine = assembleLine[assembleLine.find("Black "):len(assembleLine)]    
 
-                    elif "Ylw/Blk" in fileLine[fileLine.find("Best Time:"):(fileLine.find("Best Time:")+25)]:
-                        assembleLine = assembleLine + fileLine[0:fileLine.find("Ylw/Blk")]
-                        outFile.write(str(raceNumber) + "\t" + str(postNumber) + "\t" + assembleLine + "\n")
-                        assembleLine = fileLine[fileLine.find("Ylw/Blk"):len(fileLine)]  
+            elif "Yellow " in assembleLine[assembleLine.find("Best Time:"):(assembleLine.find("Best Time:")+25)]:
+                outFile.write(str(raceNumber) + "\t" + str(postNumber) + "\t" + assembleLine[:assembleLine.find("Yellow ")] + "\n")
+                assembleLine = assembleLine[assembleLine.find("Yellow"):len(assembleLine)]    
 
-                        if assembleLine.find("SELECTIONS ") >= 0:
-                            assembleLine = assembleLine[0:assembleLine.find("SELECTIONS ")]
-                            postNumber += 1
-                            outFile.write(str(raceNumber) + "\t" + str(postNumber) + "\t" + assembleLine + "\n")
-                            assembleLine = ""
-                            isEndOfRace = True  
-  
-                else:
+            elif "Orange " in assembleLine[assembleLine.find("Best Time:"):(assembleLine.find("Best Time:")+25)]:
+                outFile.write(str(raceNumber) + "\t" + str(postNumber) + "\t" + assembleLine[:assembleLine.find("Orange ")] + "\n")
+                assembleLine = assembleLine[assembleLine.find("Orange "):len(assembleLine)]    
 
-                    if fileLine.find("SELECTIONS ") >= 0:
-                        assembleLine = assembleLine + fileLine[0:fileLine.find("SELECTIONS ")]
-                        outFile.write(str(raceNumber) + "\t" + str(postNumber) + "\t" + assembleLine + "\n")
-                        assembleLine = ""
-                        isEndOfRace = True
+            elif "Ylw/Blk " in assembleLine[assembleLine.find("Best Time:"):(assembleLine.find("Best Time:")+25)]:
+                outFile.write(str(raceNumber) + "\t" + str(postNumber) + "\t" + assembleLine[:assembleLine.find("Ylw/Blk ")] + "\n")
+                assembleLine = assembleLine[assembleLine.find("Ylw/Blk "):len(assembleLine)]  
+                isLastPostPosition = True
 
-                    else:
+            elif isLastPostPosition == True:
+                outFile.write(str(raceNumber) + "\t" + str(postNumber) + "\t" + assembleLine[:assembleLine.find("Best Time:")+24] + "\n")
+                assembleLine = ""
+                isEndOfRace = True  
+# Signal 3
+            elif isLastPostPosition == True and assembleLine.find("SELECTIONS "):
+                outFile.write(str(raceNumber) + "\t" + str(postNumber) + "\t" + assembleLine[:assembleLine.find("SELECTIONS ")] + "\n")
+                assembleLine = ""
+                isEndOfRace = True 
 
-                        assembleLine = assembleLine + fileLine
+# Signal 2b
+
+        if assembleLine.find("NO GREYHOUND IN THIS POST POSITION") >= 0:
+            postNumber += 1
+            outFile.write(str(raceNumber) + "\t" + str(postNumber) + "\t" + assembleLine[0:assembleLine.find("NO GREYHOUND IN THIS POST POSITION ") + 34] + "\n")
+            assembleLine = assembleLine[assembleLine.find("NO GREYHOUND IN THIS POST POSITION ") + 34: len(assembleLine)] 
+          
 
 
 
-        # assembleLine = str(lineCount) + "\t" + str(raceNumber) + "\t" + str(postNumber) + "\t"
-       
 
 
         z += 1                                      # safety valve-loop count to prevent never-ending loop
