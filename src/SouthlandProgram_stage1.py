@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import PyPDF2
+
 #===============================================================================
 # Initialization
 #===============================================================================
@@ -15,8 +16,7 @@ raceNumber = 0
 
 # List of post colors
 
-postColors = []
-postColors = ["Red", "Blue", "Silver", "Green", "Black", "Yellow", "Orange", "Ylk/Blk"]
+
 
 #===============================================================================
 # Bring in PDF file and convert to readable text file
@@ -38,7 +38,7 @@ pageCount = pdfFile.numPages
 
 # Open a text file to receive output and make sure it is empty
 
-outFile = open('C:/Users/sgnol/Documents/projects/race_day/data/Southland.txt', 'a+')
+outFile = open('C:/Users/sgnol/Documents/projects/race_day/data/Southland_pdf.txt', 'a+')
 outFile.seek(0)
 outFile.truncate()
 
