@@ -32,4 +32,6 @@ while isEndOfFile == False:
 
     if fileLine[0:15] in postColors:
         print (fileLine[0:15])
-        isEndOfFile = True
+
+
+    isEndOfFile = True
