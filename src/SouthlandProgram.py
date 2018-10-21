@@ -35,7 +35,6 @@ pdfFile = PyPDF2.PdfFileReader(inFile)
 # CAUTION: PAGE COUNTS ARE ZERO-INDEXED
 
 pageCount = pdfFile.numPages
-print ("Page Count = " + str(pageCount))
 
 # Open a text file to receive output and make sure it is empty
 
@@ -44,9 +43,9 @@ outFile.seek(0)
 outFile.truncate()
 
 x = 0
+
 while x <= pageCount-1:
 
-    print ("page number = " + str(x))
 
 # Using the page number, bring                    x the first page. Write it to a working
 # file so it can be read line-b                   xline
@@ -79,7 +78,7 @@ while x <= pageCount-1:
     assembleLine = ""
 
 #====================================================================================
-# First loop to clean of empty lines at beginning of PDF file
+# First loop to clean up empty lines at beginning of PDF file
 #====================================================================================
     while isEmptyLine == True:
         
@@ -168,6 +167,9 @@ while x <= pageCount-1:
         # CAUTION: Need to search for post color within 25 positions of Best Time just in case the color is used in the
         # dogs name
 
+        # Each line writes the post position prior to it's occurance. For example: When Ylw/Blk is encountered that means
+        # the end of the Orange post has been found and is written
+
             if "Blue " in assembleLine[assembleLine.find("Best Time:"):(assembleLine.find("Best Time:")+25)]:
                 outFile.write(str(raceNumber) + "\t" + str(postNumber) + "\t" + assembleLine[:assembleLine.find("Blue")] + "\n")
                 assembleLine = assembleLine[assembleLine.find("Blue"):len(assembleLine)] 
@@ -195,29 +197,31 @@ while x <= pageCount-1:
             elif "Ylw/Blk " in assembleLine[assembleLine.find("Best Time:"):(assembleLine.find("Best Time:")+25)]:
                 outFile.write(str(raceNumber) + "\t" + str(postNumber) + "\t" + assembleLine[:assembleLine.find("Ylw/Blk ")] + "\n")
                 assembleLine = assembleLine[assembleLine.find("Ylw/Blk "):len(assembleLine)]  
-                isLastPostPosition = True
 
-            elif isLastPostPosition == True:
-                outFile.write(str(raceNumber) + "\t" + str(postNumber) + "\t" + assembleLine[:assembleLine.find("Best Time:")+24] + "\n")
+            elif "Ylw/Blk" in assembleLine[0:7]:
+                outFile.write(str(raceNumber) + "\t" + str(postNumber) + "\t" + assembleLine[0:(assembleLine.find("Best Time:")+25)] + "\n")
+                isLastPostPosition = True
                 assembleLine = ""
                 isEndOfRace = True  
-# Signal 3
-            elif isLastPostPosition == True and assembleLine.find("SELECTIONS "):
-                outFile.write(str(raceNumber) + "\t" + str(postNumber) + "\t" + assembleLine[:assembleLine.find("SELECTIONS ")] + "\n")
-                assembleLine = ""
-                isEndOfRace = True 
 
 # Signal 2b
 
-        if assembleLine.find("NO GREYHOUND IN THIS POST POSITION") >= 0:
+        elif assembleLine.find("NO GREYHOUND IN THIS POST POSITION") >= 0:
             postNumber += 1
             outFile.write(str(raceNumber) + "\t" + str(postNumber) + "\t" + assembleLine[0:assembleLine.find("NO GREYHOUND IN THIS POST POSITION ") + 34] + "\n")
-            assembleLine = assembleLine[assembleLine.find("NO GREYHOUND IN THIS POST POSITION ") + 34: len(assembleLine)] 
-          
+            assembleLine = assembleLine[len("NO GREYHOUND IN THIS POST POSITION "): len(assembleLine)]
 
+            if isLastPostPosition == True:
+                assembleLine = ""
+                isEndOfRace = True
 
+# Signal 3
 
-
+        # if isLastPostPosition == True and assembleLine.find("SELECTIONS "):
+        #     outFile.write(str(raceNumber) + "\t" + str(postNumber) + "\t" + assembleLine[:assembleLine.find("SELECTIONS ")] + "\n")
+        #     assembleLine = ""
+        #     isEndOfRace = True             
+        
 
         z += 1                                      # safety valve-loop count to prevent never-ending loop
         if z >= 300:
